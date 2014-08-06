@@ -21,9 +21,6 @@ local PathBarMode_Automatic = 0
 local PathBarMode_PathXP = 1
 local PathBarMode_PeriodicEP = 2
 
--- TODO: Ability to change this in VikingSettings
-local pathBarMode = PathBarMode_Automatic
-
 local ktPathIcon = {
   [PlayerPathLib.PlayerPathType_Soldier]    = "ClientSprites:Icon_Windows_UI_CRB_Soldier",
   [PlayerPathLib.PlayerPathType_Settler]    = "ClientSprites:Icon_Windows_UI_CRB_Colonist",
@@ -37,6 +34,8 @@ local c_arPathStrings = {
   [PlayerPathLib.PlayerPathType_Scientist]  = "CRB_Scientist",
   [PlayerPathLib.PlayerPathType_Explorer]   = "CRB_Explorer",
 }
+
+local kstrDefaultIcon = "CRB_DatachronSprites:sprDC_BluePlayRing"
 
 local kstrRed = "ffff4040"
 local kstrOrange = "ffffd100"
@@ -90,6 +89,9 @@ function VikingXPBar:OnDocumentReady()
   self.bInCombat = false
   self.bOnRedrawCooldown = false
 
+  self.tPathBarMode = PathBarMode_Automatic -- TODO: Save setting
+  self.tActualPathBarMode = PathBarMode_PathXP
+
   Apollo.RegisterTimerHandler("BaseBarCorner_RedrawCooldown", "RedrawCooldown", self)
   Apollo.CreateTimer("BaseBarCorner_RedrawCooldown", 1, false)
   Apollo.StopTimer("BaseBarCorner_RedrawCooldown")
@@ -137,11 +139,14 @@ function VikingXPBar:RedrawAllPastCooldown()
     strXPorEP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawEP())
     strTooltip = self:ConfigureEPTooltip(unitPlayer)
 
-	 if (pathBarMode == PathBarMode_PeriodicEP or (pathBarMode == PathBarMode_Automatic and PlayerPathLib.GetPathLevel() == knMaxPathLevel)) then
+	 if (self.tPathBarMode == PathBarMode_PeriodicEP or (self.tPathBarMode == PathBarMode_Automatic and PlayerPathLib.GetPathLevel() == knMaxPathLevel)) then
+		-- Periodic EP
+		self.tActualPathBarMode = PathBarMode_PeriodicEP
 		strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawPeriodicEP())
 		strPathTooltip = self:ConfigureEPTooltip(unitPlayer)
 	 else
 		-- Path XP
+		self.tActualPathBarMode = PathBarMode_PathXP
 		strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_PathBracket"), self:RedrawPathXP())
 		strPathTooltip = self:ConfigurePathXPTooltip(unitPlayer)
 	 end 
@@ -151,6 +156,7 @@ function VikingXPBar:RedrawAllPastCooldown()
     strTooltip = self:ConfigureXPTooltip(unitPlayer)
 
 	-- Path XP
+	self.tActualPathBarMode = PathBarMode_PathXP
 	strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_PathBracket"), self:RedrawPathXP())
 	strPathTooltip = self:ConfigurePathXPTooltip(unitPlayer)
   end
@@ -196,7 +202,24 @@ function VikingXPBar:RedrawAllPastCooldown()
 
   self.wndMain:FindChild("PathBarContainer"):SetTooltip(strPathTooltip)
   self.wndPathLevel:SetTooltip(strPathTooltip)
+  
+  local wndPathIcon = self.wndMain:FindChild("PathIcon")
 
+  if self.tPathBarMode == PathBarMode_Automatic then
+	if self.tActualPathBarMode == PathBarMode_PathXP then
+	  wndPathIcon:SetTooltip("Secondary Bar: Automatic (Path XP)") -- TODO: Localization
+	else
+	  wndPathIcon:SetTooltip("Secondary Bar: Automatic (EP Weekly Progress)") -- TODO: Localization
+	end
+  else
+    if self.tPathBarMode == PathBarMode_PathXP then
+       wndPathIcon:SetTooltip("Secondary Bar: Path XP") -- TODO: Localization
+    else
+       wndPathIcon:SetTooltip("Secondary Bar: EP Weekly Progress") -- TODO: Localization
+    end
+  end
+	
+	
   --Toggle Visibility based on ui preference
   local nVisibility = Apollo.GetConsoleVariable("hud.xpBarDisplay")
 
@@ -372,7 +395,10 @@ function VikingXPBar:RedrawPeriodicEP()
 	local wndPathBarFill = self.wndMain:FindChild("PathBarContainer:PathBarFill")
 	wndPathBarFill:SetMax(nEPDailyMax)
 	wndPathBarFill:SetProgress(nCurrentToDailyMax)
-		
+	
+	local wndPathIcon = self.wndMain:FindChild("PathIcon")
+    wndPathIcon:SetSprite(kstrDefaultIcon)
+
 	if nEPDailyMax - nCurrentToDailyMax == 0 then
 		wndPathBarFill:SetMax(100)
 		wndPathBarFill:SetProgress(100)
@@ -519,7 +545,33 @@ function VikingXPBar:OnXpChanged()
 end
 
 function VikingXPBar:OnPathClicked()
-  Event_FireGenericEvent("PlayerPathShow")
+  if self.tActualPathBarMode == PathBarMode_PathXP then
+    Event_FireGenericEvent("PlayerPathShow")
+  else
+    Event_FireGenericEvent("ToggleQuestLog")
+  end
+end
+
+function VikingXPBar:OnIconClicked()
+    if GetXp() == 0 then
+      return
+    end
+  
+   	if self.tPathBarMode == PathBarMode_Automatic then
+	  self.tPathBarMode = PathBarMode_PathXP
+	  self:RedrawAllPastCooldown()
+	  return
+	end
+	if self.tPathBarMode == PathBarMode_PathXP then
+	  self.tPathBarMode = PathBarMode_PeriodicEP
+	  self:RedrawAllPastCooldown()
+	  return
+	end
+	if self.tPathBarMode == PathBarMode_PeriodicEP then
+	  self.tPathBarMode = PathBarMode_Automatic
+	  self:RedrawAllPastCooldown()
+	  return
+	end
 end
 
 function VikingXPBar:OnXpClicked()
