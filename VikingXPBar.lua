@@ -13,6 +13,17 @@ local VikingXPBar = {}
 local knMaxLevel = 50 -- TODO: Replace with a variable from code
 local knMaxPathLevel = 30 -- TODO: Replace this with a non hardcoded value
 
+-- Enumeration that controls what is displayed in the path bar:
+---- Automatic: Show Path XP unless both path and player level is at max
+---- Path XP: Show Path XP
+---- Periodic EP: Show percentage of periodic EP cap
+local PathBarMode_Automatic = 0
+local PathBarMode_PathXP = 1
+local PathBarMode_PeriodicEP = 2
+
+-- TODO: Ability to change this in VikingSettings
+local pathBarMode = PathBarMode_Automatic
+
 local ktPathIcon = {
   [PlayerPathLib.PlayerPathType_Soldier]    = "ClientSprites:Icon_Windows_UI_CRB_Soldier",
   [PlayerPathLib.PlayerPathType_Settler]    = "ClientSprites:Icon_Windows_UI_CRB_Colonist",
@@ -122,16 +133,27 @@ function VikingXPBar:RedrawAllPastCooldown()
   local strPathTooltip = ""
 
   if tStats.nLevel == knMaxLevel then -- TODO: Hardcoded max level
+    -- EP
     strXPorEP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawEP())
     strTooltip = self:ConfigureEPTooltip(unitPlayer)
+
+	 if (pathBarMode == PathBarMode_PeriodicEP or (pathBarMode == PathBarMode_Automatic and PlayerPathLib.GetPathLevel() == knMaxLevelPath)) then
+		strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawPeriodicEP())
+		strPathTooltip = self:ConfigureEPTooltip(unitPlayer)
+	 else
+		-- Path XP
+		strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_PathBracket"), self:RedrawPathXP())
+		strPathTooltip = self:ConfigurePathXPTooltip(unitPlayer)
+	 end 
   else
+    -- XP
     strXPorEP = String_GetWeaselString(Apollo.GetString("BaseBar_XPBracket"), self:RedrawXP())
     strTooltip = self:ConfigureXPTooltip(unitPlayer)
-  end
 
-  --Path XP Progress Bar and Tooltip
-  strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_PathBracket"), self:RedrawPathXP())
-  strPathTooltip = self:ConfigurePathXPTooltip(unitPlayer)
+	-- Path XP
+	strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_PathBracket"), self:RedrawPathXP())
+	strPathTooltip = self:ConfigurePathXPTooltip(unitPlayer)
+  end
 
   -- If grouped, Mentored by
   if tMyGroupData and #tMyGroupData.tMentoredBy ~= 0 then
@@ -340,6 +362,24 @@ function VikingXPBar:RedrawEP()
   end
 
   return math.min(99.9, nCurrentEP / nEPToAGem * 100)
+end
+
+function VikingXPBar:RedrawPeriodicEP()
+	local nCurrentEP = GetElderPoints()
+	local nCurrentToDailyMax = GetPeriodicElderPoints()
+	local nEPDailyMax = GameLib.ElderPointsDailyMax
+
+	local wndPathBarFill = self.wndMain:FindChild("PathBarContainer:PathBarFill")
+	wndPathBarFill:SetMax(nEPDailyMax)
+	wndPathBarFill:SetProgress(nCurrentToDailyMax)
+		
+	if nEPDailyMax - nCurrentToDailyMax == 0 then
+		wndPathBarFill:SetMax(100)
+		wndPathBarFill:SetProgress(100)
+		return 100
+	end
+	
+	return math.min(99.9, nCurrentToDailyMax / nEPDailyMax * 100)
 end
 
 function VikingXPBar:ConfigureEPTooltip(unitPlayer)
