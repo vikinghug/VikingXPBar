@@ -137,7 +137,7 @@ function VikingXPBar:RedrawAllPastCooldown()
     strXPorEP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawEP())
     strTooltip = self:ConfigureEPTooltip(unitPlayer)
 
-	 if (pathBarMode == PathBarMode_PeriodicEP or (pathBarMode == PathBarMode_Automatic and PlayerPathLib.GetPathLevel() == knMaxLevelPath)) then
+	 if (pathBarMode == PathBarMode_PeriodicEP or (pathBarMode == PathBarMode_Automatic and PlayerPathLib.GetPathLevel() == knMaxPathLevel)) then
 		strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawPeriodicEP())
 		strPathTooltip = self:ConfigureEPTooltip(unitPlayer)
 	 else
