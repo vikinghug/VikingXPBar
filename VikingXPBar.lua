@@ -49,6 +49,12 @@ function VikingXPBar:new(o)
     return o
 end
 
+-------- HELPER FUNCTIONS
+local function Round(t)
+	return (math.floor(10*t-0.5)+1) / 10.0
+end
+-------- END HELPER FUNCTIONS
+
 function VikingXPBar:Init()
     Apollo.RegisterAddon(self)
 end
@@ -143,7 +149,7 @@ function VikingXPBar:RedrawAllPastCooldown()
 		-- Periodic EP
 		self.tActualPathBarMode = PathBarMode_PeriodicEP
 		strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_EPBracket"), self:RedrawPeriodicEP())
-		strPathTooltip = self:ConfigureEPTooltip(unitPlayer)
+		strPathTooltip = self:ConfigurePeriodicEPTooltip(unitPlayer)
 	 else
 		-- Path XP
 		self.tActualPathBarMode = PathBarMode_PathXP
@@ -446,6 +452,25 @@ function VikingXPBar:ConfigureEPTooltip(unitPlayer)
   strTooltip = string.format("<P Font=\"CRB_InterfaceSmall_O\">%s%s</P>%s", Apollo.GetString("CRB_Level_"), unitPlayer:GetLevel(), strTooltip)
 
   return strTooltip
+end
+
+function VikingXPBar:ConfigurePeriodicEPTooltip(unitPlayer)
+	local nCurrentToDailyMax = GetPeriodicElderPoints()
+	local nEPToAGem = GameLib.ElderPointsPerGem
+	local nEPDailyMax = GameLib.ElderPointsDailyMax
+
+	local nRestedEP = GetRestXp() 							-- amount of rested xp
+	local nRestedEPPool = GetRestXpKillCreaturePool() 		-- amount of rested xp remaining from creature kills
+
+	if not nCurrentToDailyMax or not nEPToAGem or not nEPDailyMax then
+		return
+	end
+
+	-- Top String
+	-- TODO: Localization
+	local strTooltip = string.format("Weekly Elder Gems: %s/%s (%s%s)", math.floor(nCurrentToDailyMax / nEPToAGem), math.floor(nEPDailyMax / nEPToAGem), Round(math.min(100, nCurrentToDailyMax / nEPDailyMax * 100)), "%")
+			
+	return strTooltip
 end
 
 -----------------------------------------------------------------------------------------------
