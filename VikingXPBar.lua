@@ -468,7 +468,7 @@ function VikingXPBar:ConfigurePeriodicEPTooltip(unitPlayer)
 
 	-- Top String
 	-- TODO: Localization
-	local strTooltip = string.format("Weekly Elder Gems: %s/%s (%s%s)", math.floor(nCurrentToDailyMax / nEPToAGem), math.floor(nEPDailyMax / nEPToAGem), Round(math.min(100, nCurrentToDailyMax / nEPDailyMax * 100)), "%")
+	local strTooltip = string.format("<P Font=\"CRB_InterfaceSmall_O\">Total Elder Gems: %s</P><P Font=\"CRB_InterfaceSmall_O\">Approx. Weekly Elder Gems: %s/%s (%s%s)</P>", GameLib.GetPlayerCurrency(Money.CodeEnumCurrencyType.ElderGems):GetAmount(), math.floor(nCurrentToDailyMax / nEPToAGem), math.floor(nEPDailyMax / nEPToAGem), Round(math.min(100, nCurrentToDailyMax / nEPDailyMax * 100)), "%")
 			
 	return strTooltip
 end
