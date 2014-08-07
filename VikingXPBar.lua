@@ -9,7 +9,37 @@ require "GameLib"
 require "GroupLib"
 require "PlayerPathLib"
 
-local VikingXPBar = {}
+local VikingLib
+local VikingXPBar = {
+  _VERSION = 'VikingXPBar.lua 0.1.0',
+  _URL     = 'https://github.com/vikinghug/VikingXPBar',
+  _DESCRIPTION = '',
+  _LICENSE = [[
+    MIT LICENSE
+
+    Copyright (c) 2014 Kevin Altman
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  ]]
+}
+
 local knMaxLevel = 50 -- TODO: Replace with a variable from code
 local knMaxPathLevel = 30 -- TODO: Replace this with a non hardcoded value
 
@@ -56,7 +86,7 @@ end
 -------- END HELPER FUNCTIONS
 
 function VikingXPBar:Init()
-    Apollo.RegisterAddon(self)
+    Apollo.RegisterAddon(self, nil, nil, {"VikingLibrary"})
 end
 
 function VikingXPBar:OnLoad()
@@ -95,18 +125,41 @@ function VikingXPBar:OnDocumentReady()
   self.bInCombat = false
   self.bOnRedrawCooldown = false
 
-  self.tPathBarMode = PathBarMode_Automatic -- TODO: Save setting
-  self.tActualPathBarMode = PathBarMode_PathXP
-
   Apollo.RegisterTimerHandler("BaseBarCorner_RedrawCooldown", "RedrawCooldown", self)
   Apollo.CreateTimer("BaseBarCorner_RedrawCooldown", 1, false)
   Apollo.StopTimer("BaseBarCorner_RedrawCooldown")
+
+  if VikingLib == nil then
+    VikingLib = Apollo.GetAddon("VikingLibrary")
+  end
+
+  if VikingLib ~= nil then
+    self.db = VikingLib.Settings.RegisterSettings(self, "VikingXPBar", self:GetDefaults(), "XP Bar")
+    self.generalDb = self.db.parent
+  end
+	
+  self.tPathBarMode = self.db.char.mode
 
   if GameLib.GetPlayerUnit() ~= nil then
     self:RedrawAll()
   end
 
-  self.xmlDoc = nil
+end
+
+function VikingXPBar:GetDefaults()
+
+  local tColors = VikingLib.Settings.GetColors()
+
+  return {
+    char = {
+      mode = PathBarMode_Automatic,
+      colors = {
+        Normal = { col = "ff" .. tColors.green },
+        Rested = { col = "ff" .. tColors.blue },
+      }
+    }
+  }
+
 end
 
 function VikingXPBar:RedrawCooldown()
@@ -202,8 +255,7 @@ function VikingXPBar:RedrawAllPastCooldown()
   -- self.wndXPLevel:SetText(String_GetWeaselString(strXPorEP))
   -- self.wndPathLevel:SetText(strPathXP)
 
-  self.wndMain:FindChild("XPBarContainer"):SetBGColor(self.bInCombat and ApolloColor.new("66ffffff") or ApolloColor.new("white"))
-  self.wndMain:FindChild("XPBarContainer"):SetTooltip(strTooltip)
+   self.wndMain:FindChild("XPBarContainer"):SetTooltip(strTooltip)
   self.wndXPLevel:SetTooltip(strTooltip)
 
   self.wndMain:FindChild("PathBarContainer"):SetTooltip(strPathTooltip)
@@ -266,6 +318,7 @@ function VikingXPBar:RedrawPathXP()
   local wndPathBarFill = self.wndMain:FindChild("PathBarContainer:PathBarFill")
   wndPathBarFill:SetMax(nNeededXP)
   wndPathBarFill:SetProgress(nCurrentXP)
+  wndPathBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Normal"].col))
 
   local ePathId = PlayerPathLib.GetPlayerPathType()
   local wndPathIcon = self.wndMain:FindChild("PathIcon")
@@ -326,12 +379,15 @@ function VikingXPBar:RedrawXP()
 
   wndXPBarFill:SetMax(nNeededXP)
   wndXPBarFill:SetProgress(nCurrentXP)
+  wndXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Normal"].col))
 
   -- Rest Bar and Goal (where it ends)
   wndRestXPBarFill:SetMax(nNeededXP)
   wndRestXPBarFill:Show(nRestedXP and nRestedXP > 0)
+
   if nRestedXP and nRestedXP > 0 then
     wndRestXPBarFill:SetProgress(math.min(nNeededXP, nCurrentXP + nRestedXP))
+  	wndRestXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
   end
 
   local bShowRestXPGoal = nRestedXP and nRestedXPPool and nRestedXP > 0 and nRestedXPPool > 0
@@ -366,12 +422,14 @@ function VikingXPBar:RedrawEP()
 
   wndXPBarFill:SetMax(nEPToAGem)
   wndXPBarFill:SetProgress(nCurrentEP)
+  wndXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Normal"].col))
 
   -- Rest Bar and Goal (where it ends)
   wndRestXPBarFill:SetMax(nEPToAGem)
   wndRestXPBarFill:Show(nRestedEP and nRestedEP > 0)
   if nRestedEP and nRestedEP > 0 then
     wndRestXPBarFill:SetProgress(math.min(nEPToAGem, nCurrentEP + nRestedEP))
+    wndRestXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
   end
 
   local bShowRestEPGoal = nRestedEP and nRestedEPPool and nRestedEP > 0 and nRestedEPPool > 0
@@ -401,6 +459,7 @@ function VikingXPBar:RedrawPeriodicEP()
 	local wndPathBarFill = self.wndMain:FindChild("PathBarContainer:PathBarFill")
 	wndPathBarFill:SetMax(nEPDailyMax)
 	wndPathBarFill:SetProgress(nCurrentToDailyMax)
+	wndPathBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Normal"].col))
 	
 	local wndPathIcon = self.wndMain:FindChild("PathIcon")
     wndPathIcon:SetSprite(kstrDefaultIcon)
@@ -583,17 +642,20 @@ function VikingXPBar:OnIconClicked()
     end
   
    	if self.tPathBarMode == PathBarMode_Automatic then
-	  self.tPathBarMode = PathBarMode_PathXP
+	  self.db.char.mode = PathBarMode_PathXP
+	  self.tPathBarMode = self.db.char.mode
 	  self:RedrawAllPastCooldown()
 	  return
 	end
 	if self.tPathBarMode == PathBarMode_PathXP then
-	  self.tPathBarMode = PathBarMode_PeriodicEP
+	  self.db.char.mode = PathBarMode_PeriodicEP
+	  self.tPathBarMode = self.db.char.mode
 	  self:RedrawAllPastCooldown()
 	  return
 	end
 	if self.tPathBarMode == PathBarMode_PeriodicEP then
-	  self.tPathBarMode = PathBarMode_Automatic
+	  self.db.char.mode = PathBarMode_Automatic
+	  self.tPathBarMode = self.db.char.mode
 	  self:RedrawAllPastCooldown()
 	  return
 	end
@@ -651,6 +713,29 @@ function VikingXPBar:OnTutorial_RequestUIAnchor(eAnchor, idTutorial, strPopupTex
   tRect.l, tRect.t, tRect.r, tRect.b = self.wndInvokeForm:GetRect()
 
   Event_FireGenericEvent("Tutorial_RequestUIAnchorResponse", eAnchor, idTutorial, strPopupText, tRect)
+end
+
+---------------------------------------------------------------------------------------------------
+-- VikingSettings Functions
+---------------------------------------------------------------------------------------------------
+
+function VikingXPBar:UpdateSettingsForm(wndContainer)
+  -- Colors
+  for sBarName, tBarColorData in pairs(self.db.char.colors) do
+    local wndColorContainer = wndContainer:FindChild("Colors:Content:" .. sBarName)
+
+    if wndColorContainer then
+      for sColorState, sColor in pairs(tBarColorData) do
+        local wndColor = wndColorContainer:FindChild(sColorState)
+
+        if wndColor then wndColor:SetBGColor(sColor) end
+      end
+    end
+  end
+end
+
+function VikingXPBar:OnSettingsBarColor( wndHandler, wndControl, eMouseButton )
+  VikingLib.Settings.ShowColorPickerForSetting(self.db.char.colors[wndControl:GetParent():GetName()], wndControl:GetName(), function() self:RedrawAllPastCooldown() end, wndControl)
 end
 
 local BaseBarCornerInst = VikingXPBar:new()
