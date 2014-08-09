@@ -734,6 +734,8 @@ function VikingXPBar:UpdateSettingsForm(wndContainer)
       end
     end
   end
+  
+  self:RedrawAllPastCooldown()
 end
 
 function VikingXPBar:OnSettingsBarColor( wndHandler, wndControl, eMouseButton )
