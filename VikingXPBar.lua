@@ -438,7 +438,7 @@ function VikingXPBar:RedrawEP()
   wndRestXPBarGoal:Show(bShowRestEPGoal)
   if bShowRestEPGoal then
     wndRestXPBarGoal:SetProgress(math.min(nEPToAGem, nCurrentEP + nRestedEPPool))
-	wndRestXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
+	wndRestXPBarGoal:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
   end
 
   -- This is special to Rested EP, as there is a daily max
