@@ -362,49 +362,6 @@ end
 -- Elder Points (When at max level)
 -----------------------------------------------------------------------------------------------
 
-function VikingXPBar:RedrawXP()
-  local nCurrentXP = GetXp() - GetXpToCurrentLevel()    -- current amount of xp into the current level
-  local nNeededXP = GetXpToNextLevel()          -- total amount needed to move through current level
-  local nRestedXP = GetRestXp()               -- amount of rested xp
-  local nRestedXPPool = GetRestXpKillCreaturePool()     -- amount of rested xp remaining from creature kills
-
-  if not nCurrentXP or not nNeededXP or not nNeededXP or not nRestedXP then
-    return
-  end
-
-  local wndXPBarFill = self.wndMain:FindChild("XPBarContainer:XPBarFill")
-  local wndRestXPBarFill = self.wndMain:FindChild("XPBarContainer:RestXPBarFill")
-  local wndRestXPBarGoal = self.wndMain:FindChild("XPBarContainer:RestXPBarGoal")
-  local wndMaxEPBar = self.wndMain:FindChild("XPBarContainer:DailyMaxEPBar")
-
-  wndXPBarFill:SetMax(nNeededXP)
-  wndXPBarFill:SetProgress(nCurrentXP)
-  wndXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Normal"].col))
-
-  -- Rest Bar and Goal (where it ends)
-  wndRestXPBarFill:SetMax(nNeededXP)
-  wndRestXPBarFill:Show(nRestedXP and nRestedXP > 0)
-
-  if nRestedXP and nRestedXP > 0 then
-    wndRestXPBarFill:SetProgress(math.min(nNeededXP, nCurrentXP + nRestedXP))
-  	wndRestXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
-  end
-
-  local bShowRestXPGoal = nRestedXP and nRestedXPPool and nRestedXP > 0 and nRestedXPPool > 0
-  wndRestXPBarGoal:SetMax(nNeededXP)
-  wndRestXPBarGoal:Show(bShowRestXPGoal)
-  if bShowRestXPGoal then
-    wndRestXPBarGoal:SetProgress(math.min(nNeededXP, nCurrentXP + nRestedXPPool))
-	wndRestXPBarGoal:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
-  end
-
-  -- This is only for EP at max level
-  wndMaxEPBar:SetProgress(0)
-  wndMaxEPBar:Show(false)
-
-  return math.min(99.9, nCurrentXP / nNeededXP * 100)
-end
-
 function VikingXPBar:RedrawEP()
   local nCurrentEP = GetElderPoints()
   local nEPToAGem = GameLib.ElderPointsPerGem
@@ -551,21 +508,32 @@ function VikingXPBar:RedrawXP()
   local wndXPBarFill = self.wndMain:FindChild("XPBarContainer:XPBarFill")
   local wndRestXPBarFill = self.wndMain:FindChild("XPBarContainer:RestXPBarFill")
   local wndRestXPBarGoal = self.wndMain:FindChild("XPBarContainer:RestXPBarGoal")
+  local wndMaxEPBar = self.wndMain:FindChild("XPBarContainer:DailyMaxEPBar")
 
   wndXPBarFill:SetMax(nNeededXP)
   wndXPBarFill:SetProgress(nCurrentXP)
+  wndXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Normal"].col))
 
+  -- Rest Bar and Goal (where it ends)
   wndRestXPBarFill:SetMax(nNeededXP)
   wndRestXPBarFill:Show(nRestedXP and nRestedXP > 0)
+
   if nRestedXP and nRestedXP > 0 then
     wndRestXPBarFill:SetProgress(math.min(nNeededXP, nCurrentXP + nRestedXP))
+  	wndRestXPBarFill:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
   end
 
+  local bShowRestXPGoal = nRestedXP and nRestedXPPool and nRestedXP > 0 and nRestedXPPool > 0
   wndRestXPBarGoal:SetMax(nNeededXP)
-  wndRestXPBarGoal:Show(nRestedXP and nRestedXPPool and nRestedXP > 0 and nRestedXPPool > 0)
-  if nRestedXP and nRestedXPPool and nRestedXP > 0 and nRestedXPPool > 0 then
+  wndRestXPBarGoal:Show(bShowRestXPGoal)
+  if bShowRestXPGoal then
     wndRestXPBarGoal:SetProgress(math.min(nNeededXP, nCurrentXP + nRestedXPPool))
+	wndRestXPBarGoal:SetBarColor(ApolloColor.new(self.db.char.colors["Rested"].col))
   end
+
+  -- This is only for EP at max level
+  wndMaxEPBar:SetProgress(0)
+  wndMaxEPBar:Show(false)
 
   return math.min(99.9, nCurrentXP / nNeededXP * 100)
 end
