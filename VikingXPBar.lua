@@ -155,7 +155,7 @@ function VikingXPBar:GetDefaults()
       mode = PathBarMode_Automatic,
       colors = {
         Normal = { col = "ff" .. tColors.green },
-        Rested = { col = "ff" .. tColors.blue },
+        Rested = { col = "ff" .. tColors.lightPurple },
       }
     }
   }
