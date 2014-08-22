@@ -52,10 +52,10 @@ local PathBarMode_PathXP = 1
 local PathBarMode_PeriodicEP = 2
 
 local ktPathIcon = {
-  [PlayerPathLib.PlayerPathType_Soldier]    = "ClientSprites:Icon_Windows_UI_CRB_Soldier",
-  [PlayerPathLib.PlayerPathType_Settler]    = "ClientSprites:Icon_Windows_UI_CRB_Colonist",
-  [PlayerPathLib.PlayerPathType_Scientist]  = "ClientSprites:Icon_Windows_UI_CRB_Scientist",
-  [PlayerPathLib.PlayerPathType_Explorer]   = "ClientSprites:Icon_Windows_UI_CRB_Explorer",
+  [PlayerPathLib.PlayerPathType_Soldier]    = "VikingSprites:Icon_Path_Soldier_24",
+  [PlayerPathLib.PlayerPathType_Settler]    = "VikingSprites:Icon_Path_Settler_24",
+  [PlayerPathLib.PlayerPathType_Scientist]  = "VikingSprites:Icon_Path_Scientist_24",
+  [PlayerPathLib.PlayerPathType_Explorer]   = "VikingSprites:Icon_Path_Explorer_24",
 }
 
 local c_arPathStrings = {
@@ -158,7 +158,7 @@ function VikingXPBar:GetDefaults()
         Rested = { col = "ff" .. tColors.blue },
       },
       textStyle = {
-        OutLineFont = false  
+        OutLineFont = false
       }
     }
   }
@@ -211,7 +211,7 @@ function VikingXPBar:RedrawAllPastCooldown()
       self.tActualPathBarMode = PathBarMode_PathXP
       strPathXP = String_GetWeaselString(Apollo.GetString("BaseBar_PathBracket"), self:RedrawPathXP())
       strPathTooltip = self:ConfigurePathXPTooltip(unitPlayer)
-    end 
+    end
   else
     -- XP
     strXPorEP = String_GetWeaselString(Apollo.GetString("BaseBar_XPBracket"), self:RedrawXP())
@@ -263,7 +263,7 @@ function VikingXPBar:RedrawAllPastCooldown()
 
   self.wndMain:FindChild("PathBarContainer"):SetTooltip(strPathTooltip)
   self.wndPathLevel:SetTooltip(strPathTooltip)
-  
+
   local wndPathIcon = self.wndMain:FindChild("PathIcon")
 
   if self.tPathBarMode == PathBarMode_Automatic then
@@ -326,7 +326,7 @@ function VikingXPBar:RedrawPathXP()
   local ePathId = PlayerPathLib.GetPlayerPathType()
   local wndPathIcon = self.wndMain:FindChild("PathIcon")
   wndPathIcon:SetSprite(ktPathIcon[ePathId])
-  
+
   if self.db.char.textStyle["OutlineFont"] then
     wndPathBarFill:SetFont("CRB_InterfaceSmall_O")
   else
@@ -377,12 +377,12 @@ function VikingXPBar:RedrawEP()
   local nEPDailyMax = GameLib.ElderPointsDailyMax
   local nRestedEP = GetRestXp()               -- amount of rested xp
   local nRestedEPPool = GetRestXpKillCreaturePool()     -- amount of rested xp remaining from creature kills
-  
+
   local wndXPBarFill = self.wndMain:FindChild("XPBarContainer:XPBarFill")
   local wndRestXPBarFill = self.wndMain:FindChild("XPBarContainer:RestXPBarFill")
   local wndRestXPBarGoal = self.wndMain:FindChild("XPBarContainer:RestXPBarGoal")
   local wndMaxEPBar = self.wndMain:FindChild("XPBarContainer:DailyMaxEPBar")
-  
+
   if self.db.char.textStyle["OutlineFont"] then
     wndXPBarFill:SetFont("CRB_InterfaceSmall_O")
     wndRestXPBarFill:SetFont("CRB_InterfaceSmall_O")
@@ -439,7 +439,7 @@ function VikingXPBar:RedrawPeriodicEP()
 
   local wndPathIcon = self.wndMain:FindChild("PathIcon")
   wndPathIcon:SetSprite(kstrDefaultIcon)
-  
+
   if self.db.char.textStyle["OutlineFont"] then
     wndPathBarFill:SetFont("CRB_InterfaceSmall_O")
   else
@@ -523,12 +523,12 @@ function VikingXPBar:RedrawXP()
   local nNeededXP = GetXpToNextLevel()          -- total amount needed to move through current level
   local nRestedXP = GetRestXp()               -- amount of rested xp
   local nRestedXPPool = GetRestXpKillCreaturePool()     -- amount of rested xp remaining from creature kills
-  
+
   local wndXPBarFill = self.wndMain:FindChild("XPBarContainer:XPBarFill")
   local wndRestXPBarFill = self.wndMain:FindChild("XPBarContainer:RestXPBarFill")
   local wndRestXPBarGoal = self.wndMain:FindChild("XPBarContainer:RestXPBarGoal")
   local wndMaxEPBar = self.wndMain:FindChild("XPBarContainer:DailyMaxEPBar")
-  
+
   if self.db.char.textStyle["OutlineFont"] then
     wndXPBarFill:SetFont("CRB_InterfaceSmall_O")
     wndRestXPBarFill:SetFont("CRB_InterfaceSmall_O")
@@ -539,7 +539,7 @@ function VikingXPBar:RedrawXP()
 
   if not nCurrentXP or not nNeededXP or not nNeededXP or not nRestedXP then
     return
-  end 
+  end
 
   wndXPBarFill:SetMax(nNeededXP)
   wndXPBarFill:SetProgress(nCurrentXP)
@@ -733,10 +733,10 @@ function VikingXPBar:UpdateSettingsForm(wndContainer)
       end
     end
   end
-  
+
   -- Text Style
   wndContainer:FindChild("TextStyle:Content:OutlineFont"):SetCheck(self.db.char.textStyle["OutlineFont"])
-  
+
   self:RedrawAllPastCooldown()
 end
 
