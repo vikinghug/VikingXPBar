@@ -65,7 +65,7 @@ local c_arPathStrings = {
   [PlayerPathLib.PlayerPathType_Explorer]   = "CRB_Explorer",
 }
 
-local kstrDefaultIcon = "CRB_DatachronSprites:sprDC_BluePlayRing"
+local kstrDefaultIcon = "VikingSprites:Icon_Coin_ElderGems_24"
 
 local kstrRed = "ffff4040"
 local kstrOrange = "ffffd100"
@@ -155,7 +155,7 @@ function VikingXPBar:GetDefaults()
       mode = PathBarMode_Automatic,
       colors = {
         Normal = { col = "ff" .. tColors.green },
-        Rested = { col = "ff" .. tColors.blue },
+        Rested = { col = "ff" .. tColors.lightPurple },
       },
       textStyle = {
         OutLineFont = false
